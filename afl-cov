@@ -764,7 +764,7 @@ def import_fuzzing_dirs(cov_paths, cargs):
     return True
 
 def import_test_cases(qdir):
-    return sorted(glob.glob(qdir + "/id:*"))
+    return sorted(glob.glob(qdir + "/*"))
 
 def init_tracking(cov_paths, cargs):
 
