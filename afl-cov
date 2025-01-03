@@ -506,8 +506,8 @@ def search_cov(cargs):
 
     search_rv = False
 
-    id_delta_file = cargs.afl_fuzzing_dir + '/cov/id-delta-cov'
-    log_file      = cargs.afl_fuzzing_dir + '/cov/afl-cov.log'
+    id_delta_file = cargs.test_file_dir + '/cov/id-delta-cov'
+    log_file      = cargs.test_file_dir + '/cov/afl-cov.log'
 
     with open(id_delta_file, 'r') as f:
         for line in f:
@@ -551,10 +551,10 @@ def get_cycle_num(id_num, cargs):
     ### default cycle
     cycle_num = 0
 
-    if not is_dir(cargs.afl_fuzzing_dir + '/plot_data'):
+    if not is_dir(cargs.test_file_dir + '/plot_data'):
         return cycle_num
 
-    with open(cargs.afl_fuzzing_dir + '/plot_data') as f:
+    with open(cargs.test_file_dir + '/plot_data') as f:
         for line in f:
             ### unix_time, cycles_done, cur_path, paths_total, pending_total,...
             ### 1427742641, 11, 54, 419, 45, 0, 2.70%, 0, 0, 9, 1645.47
@@ -650,13 +650,13 @@ def gen_web_cov_report(fuzz_dir, cov_paths, cargs):
 def is_afl_fuzz_running(cargs):
 
     pid = None
-    stats_file = cargs.afl_fuzzing_dir + '/fuzzer_stats'
+    stats_file = cargs.test_file_dir + '/fuzzer_stats'
 
     if os.path.exists(stats_file):
         pid = get_running_pid(stats_file, r'fuzzer_pid\s+\:\s+(\d+)')
     else:
-        for p in os.listdir(cargs.afl_fuzzing_dir):
-            stats_file = "%s/%s/fuzzer_stats" % (cargs.afl_fuzzing_dir, p)
+        for p in os.listdir(cargs.test_file_dir):
+            stats_file = "%s/%s/fuzzer_stats" % (cargs.test_file_dir, p)
             if os.path.exists(stats_file):
                 ### allow a single running AFL instance in parallel mode
                 ### to mean that AFL is running (and may be generating
@@ -730,7 +730,7 @@ def run_cmd(cmd, log_file, cargs, collect):
 
 def import_fuzzing_dirs(cov_paths, cargs):
 
-    if not cargs.afl_fuzzing_dir:
+    if not cargs.test_file_dir:
         print("[*] Must specify test file directory with --test-file-dir or -d")
         return False
 
@@ -738,7 +738,7 @@ def import_fuzzing_dirs(cov_paths, cargs):
         if not init_tracking(cov_paths, cargs):
             return False
 
-    def_dir = cargs.afl_fuzzing_dir
+    def_dir = cargs.test_file_dir
 
     '''
 
@@ -770,7 +770,7 @@ def init_tracking(cov_paths, cargs):
 
     cov_paths['dirs'] = {}
 
-    cov_paths['top_dir']  = "%s/cov"  % cargs.afl_fuzzing_dir
+    cov_paths['top_dir']  = "%s/cov"  % cargs.test_file_dir
     cov_paths['web_dir']  = "%s/web"  % cov_paths['top_dir']
     cov_paths['lcov_dir'] = "%s/lcov" % cov_paths['top_dir']
     cov_paths['diff_dir'] = "%s/diff" % cov_paths['top_dir']
@@ -966,7 +966,7 @@ def validate_cargs(cargs):
             return False
 
     if cargs.func_search or cargs.line_search:
-        if not cargs.afl_fuzzing_dir:
+        if not cargs.test_file_dir:
             print("[*] Must set --test-file-dir")
             return False
         if cargs.func_search and '()' not in cargs.func_search:
@@ -979,9 +979,9 @@ def validate_cargs(cargs):
         if not check_core_pattern():
             return False
 
-    if not cargs.live and not is_dir(cargs.afl_fuzzing_dir):
+    if not cargs.live and not is_dir(cargs.test_file_dir):
         print("[*] It doesn't look like directory '%s' exists" \
-            % (cargs.afl_fuzzing_dir))
+            % (cargs.test_file_dir))
         return False
 
     if cargs.disable_lcov_web and cargs.lcov_web_all:
@@ -1008,7 +1008,7 @@ def gcno_files_exist(cargs):
     return True
 
 def is_afl_running(cargs):
-    while not is_dir(cargs.afl_fuzzing_dir):
+    while not is_dir(cargs.test_file_dir):
         if not cargs.background:
             print("[-] Sleep for %d seconds for AFL fuzzing directory to be created..." \
                     % cargs.sleep)
@@ -1069,17 +1069,17 @@ def stop_afl(cargs):
     ### stop afl-cov processes since they will stop on their own after afl-fuzz
     ### is also stopped.
 
-    if not cargs.afl_fuzzing_dir:
+    if not cargs.test_file_dir:
         print("[*] Must set --test-file-dir")
         return False
 
-    if not is_dir(cargs.afl_fuzzing_dir):
+    if not is_dir(cargs.test_file_dir):
         print("[*] Doesn't look like AFL fuzzing directory '%s' exists." \
-                % cargs.afl_fuzzing_dir)
+                % cargs.test_file_dir)
         return False
 
-    if os.path.exists(cargs.afl_fuzzing_dir + '/fuzzer_stats'):
-        afl_pid = get_running_pid(cargs.afl_fuzzing_dir + '/fuzzer_stats',
+    if os.path.exists(cargs.test_file_dir + '/fuzzer_stats'):
+        afl_pid = get_running_pid(cargs.test_file_dir + '/fuzzer_stats',
                 r'fuzzer_pid\s+\:\s+(\d+)')
         if afl_pid:
             print("[+] Stopping running afl-fuzz instance, PID: %d" % afl_pid)
@@ -1089,8 +1089,8 @@ def stop_afl(cargs):
             rv = False
     else:
         found = False
-        for p in os.listdir(cargs.afl_fuzzing_dir):
-            stats_file = cargs.afl_fuzzing_dir + '/' + p + '/fuzzer_stats'
+        for p in os.listdir(cargs.test_file_dir):
+            stats_file = cargs.test_file_dir + '/' + p + '/fuzzer_stats'
             if os.path.exists(stats_file):
                 afl_pid = get_running_pid(stats_file, r'fuzzer_pid\s+\:\s+(\d+)')
                 if afl_pid:
