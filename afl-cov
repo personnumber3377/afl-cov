@@ -155,7 +155,9 @@ def process_afl_test_cases(cargs):
                 logr("\n*** Imported %d new test cases from: %s\n" \
                         % (len(new_files), (fuzz_dir)),
                         cov_paths['log_file'], cargs)
-
+            # Setup the max and min id here because we actually don't have them in the first place...
+            cov_paths['id_min'] = 0 # Set to zero
+            cov_paths['id_max'] = len(new_files)-1 # Just like this maybe???
             for f in new_files:
 
                 f_ctr += 1
@@ -176,7 +178,7 @@ def process_afl_test_cases(cargs):
 
                 cov_paths['diff'] = "%s/%s" % \
                         (cov_paths['diff_dir'], os.path.basename(f))
-                id_range_update(f, cov_paths)
+                # id_range_update(f, cov_paths)
 
                 ### execute the command to generate code coverage stats
                 ### for the current AFL test case file
