@@ -139,7 +139,7 @@ def process_afl_test_cases(cargs):
             last_file = False
             num_files = 0
             new_files = []
-            tmp_files = import_test_cases(fuzz_dir + '/queue')
+            tmp_files = import_test_cases(fuzz_dir)
             dir_ctr  += 1
             f_ctr     = 0
 
@@ -153,7 +153,7 @@ def process_afl_test_cases(cargs):
 
             if new_files:
                 logr("\n*** Imported %d new test cases from: %s\n" \
-                        % (len(new_files), (fuzz_dir + '/queue')),
+                        % (len(new_files), (fuzz_dir)),
                         cov_paths['log_file'], cargs)
 
             for f in new_files:
@@ -170,7 +170,7 @@ def process_afl_test_cases(cargs):
                 out_lines = []
                 curr_cycle = get_cycle_num(num_files, cargs)
 
-                logr("[+] AFL test case: %s (%d / %d), cycle: %d" \
+                logr("[+] Test case: %s (%d / %d), cycle: %d" \
                         % (os.path.basename(f), num_files, len(afl_files),
                         curr_cycle), cov_paths['log_file'], cargs)
 
@@ -731,7 +731,7 @@ def run_cmd(cmd, log_file, cargs, collect):
 def import_fuzzing_dirs(cov_paths, cargs):
 
     if not cargs.afl_fuzzing_dir:
-        print("[*] Must specify AFL fuzzing dir with --afl-fuzzing-dir or -d")
+        print("[*] Must specify test file directory with --test-file-dir or -d")
         return False
 
     if 'top_dir' not in cov_paths:
@@ -739,6 +739,8 @@ def import_fuzzing_dirs(cov_paths, cargs):
             return False
 
     def_dir = cargs.afl_fuzzing_dir
+
+    '''
 
     if is_dir("%s/queue" % def_dir):
         if def_dir not in cov_paths['dirs']:
@@ -752,6 +754,12 @@ def import_fuzzing_dirs(cov_paths, cargs):
                     ### parallel AFL execution
                     if fuzz_dir not in cov_paths['dirs']:
                         add_dir(fuzz_dir, cov_paths)
+
+    '''
+
+    # Just add this singular directory to the stuff:
+
+    add_dir(def_dir, cov_paths)
 
     return True
 
@@ -959,7 +967,7 @@ def validate_cargs(cargs):
 
     if cargs.func_search or cargs.line_search:
         if not cargs.afl_fuzzing_dir:
-            print("[*] Must set --afl-fuzzing-dir")
+            print("[*] Must set --test-file-dir")
             return False
         if cargs.func_search and '()' not in cargs.func_search:
             cargs.func_search += '()'
@@ -1062,7 +1070,7 @@ def stop_afl(cargs):
     ### is also stopped.
 
     if not cargs.afl_fuzzing_dir:
-        print("[*] Must set --afl-fuzzing-dir")
+        print("[*] Must set --test-file-dir")
         return False
 
     if not is_dir(cargs.afl_fuzzing_dir):
@@ -1119,8 +1127,8 @@ def parse_cmdline():
 
     p.add_argument("-e", "--coverage-cmd", type=str,
             help="Set command to exec (including args, and assumes code coverage support)")
-    p.add_argument("-d", "--afl-fuzzing-dir", type=str,
-            help="top level AFL fuzzing directory")
+    p.add_argument("-d", "--test-file-dir", type=str,
+            help="test file directory. Basically just a directory with the test files for which you want to generate coverage.")
     p.add_argument("-c", "--code-dir", type=str,
             help="Directory where the code lives (compiled with code coverage support)")
     p.add_argument("-f", "--follow", action='store_true',
@@ -1194,7 +1202,7 @@ def parse_cmdline():
     p.add_argument("--readelf-path", type=str,
             help="Path to readelf command", default="/usr/bin/readelf")
     p.add_argument("--stop-afl", action='store_true',
-            help="Stop all running afl-fuzz instances associated with --afl-fuzzing-dir <dir>",
+            help="Stop all running afl-fuzz instances associated with --test-file-dir <dir>",
             default=False)
     p.add_argument("--validate-args", action='store_true',
             help="Validate args and exit", default=False)
